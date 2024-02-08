@@ -1,41 +1,60 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
 
-import { Context } from "../store/appContext";
 
-export const Demo = () => {
-	const { store, actions } = useContext(Context);
+function PrivateView() {
+    const [userData, setUserData] = useState(null);
 
-	return (
-		<div className="container">
-			<ul className="list-group">
-				{store.demo.map((item, index) => {
-					return (
-						<li
-							key={index}
-							className="list-group-item d-flex justify-content-between"
-							style={{ background: item.background }}>
-							<Link to={"/single/" + index}>
-								<span>Link to: {item.title}</span>
-							</Link>
-							{// Conditional render example
-							// Check to see if the background is orange, if so, display the message
-							item.background === "orange" ? (
-								<p style={{ color: item.initial }}>
-									Check store/flux.js scroll to the actions to see the code
-								</p>
-							) : null}
-							<button className="btn btn-success" onClick={() => actions.changeColor(index, "orange")}>
-								Change Color
-							</button>
-						</li>
-					);
-				})}
-			</ul>
-			<br />
-			<Link to="/">
-				<button className="btn btn-primary">Back home</button>
-			</Link>
-		</div>
-	);
-};
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+
+        if (token) {
+            // Si hay un token en localStorage, puedes usarlo para hacer una solicitud a la ruta protegida
+            fetchProtectedData(token);
+        } else {
+            // Si no hay token, redirige al usuario a la página de inicio de sesión
+            // Por ejemplo:
+            // history.push('/login');
+        }
+    }, []);
+
+    const fetchProtectedData = async (token) => {
+        try {
+            const response = await fetch(`https://bookish-trout-5gqqq54p45v5f4xwv-3001.app.github.dev/protected`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.msg);
+            }
+
+            const data = await response.json();
+            setUserData(data.user);
+
+        } catch (error) {
+            console.error('Error fetching protected data:', error);
+            // Podrías manejar el error de alguna manera, como redirigir al usuario a la página de inicio de sesión
+            // Por ejemplo:
+            // history.push('/login');
+        }
+    };
+
+    return (
+        <div>
+            {userData ? (
+                <div>
+                    <h2>Bienvenido {userData},su token se guardo correctamente en el localStorage.</h2>
+                    {/* Otros datos del usuario */}
+                </div>
+            ) : (
+                <p>Cargando...</p>
+            )}
+        </div>
+    );
+}
+
+export default PrivateView;

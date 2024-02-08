@@ -1,28 +1,67 @@
-import React, { useState, useEffect, useContext } from "react";
-import PropTypes from "prop-types";
-import { Link, useParams } from "react-router-dom";
-import { Context } from "../store/appContext";
-import rigoImageUrl from "../../img/rigo-baby.jpg";
 
-export const Single = props => {
-	const { store, actions } = useContext(Context);
-	const params = useParams();
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-	return (
-		<div className="jumbotron">
-			<h1 className="display-4">This will show the demo element: {store.demo[params.theid].title}</h1>
-			<img src={rigoImageUrl} />
-			<hr className="my-4" />
+function Login() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
-			<Link to="/">
-				<span className="btn btn-primary btn-lg" href="#" role="button">
-					Back home
-				</span>
-			</Link>
-		</div>
-	);
-};
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        
+        try {
+            const response = await fetch('https://bookish-trout-5gqqq54p45v5f4xwv-3001.app.github.dev/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
 
-Single.propTypes = {
-	match: PropTypes.object
-};
+            if (!response.ok) {
+                const errorMessage = await response.json();
+                throw new Error(errorMessage.msg);
+            }
+
+            const data = await response.json();
+            const token = data.token;
+            localStorage.setItem('token', token); // Guarda el token en localStorage
+            navigate('/private'); // Redirige a la página protegida
+
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
+    return (
+        <div>
+            <h2>Iniciar Sesión</h2>
+            <form onSubmit={handleSubmit}>
+                <div>
+                    <label htmlFor="email">Correo electrónico:</label>
+                    <input 
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <label htmlFor="password">Contraseña:</label>
+                    <input 
+                        type="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
+                <button type="submit">Iniciar Sesión</button>
+            </form>
+        </div>
+    );
+}
+
+export default Login;
